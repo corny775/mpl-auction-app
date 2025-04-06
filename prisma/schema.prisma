@@ -1,0 +1,43 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Admin {
+  id       String @id @default(cuid())
+  username String @unique
+  password String
+}
+
+model Buyer {
+  id       String @id @default(cuid())
+  username String @unique
+  password String
+  teamName String
+  bids     Bid[] // This line adds the relation back to Bid
+}
+
+model Player {
+  id         String  @id @default(cuid())
+  name       String
+  role       String
+  basePrice  Float
+  currentBid Float   @default(0)
+  isSold     Boolean @default(false)
+  soldToTeam String?
+  bids       Bid[] // This line adds the relation back to Bid
+}
+
+model Bid {
+  id        String   @id @default(cuid())
+  playerId  String
+  buyerId   String
+  bidAmount Float
+  timestamp DateTime @default(now())
+  player    Player   @relation(fields: [playerId], references: [id])
+  buyer     Buyer    @relation(fields: [buyerId], references: [id])
+}
