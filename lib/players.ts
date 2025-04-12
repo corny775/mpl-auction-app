@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client'
-import { verifyToken, JwtPayload } from './auth'
+import { verifyToken } from './auth' // Removed unused JwtPayload import
 
 const prisma = new PrismaClient()
 

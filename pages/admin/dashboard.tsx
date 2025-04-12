@@ -23,29 +23,28 @@ const AdminDashboard = () => {
   const router = useRouter();
 
   useEffect(() => {
-    // Check if admin is authenticated
     const token = localStorage.getItem('adminToken');
     if (!token) {
       router.push('/admin/login');
       return;
     }
 
-    fetchPlayers();
-  }, [statusFilter]);
+    const fetchPlayers = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(`/api/players?status=${statusFilter}`);
+        setPlayers(response.data);
+        setError('');
+      } catch (error) {
+        setError('Failed to fetch players');
+        console.error('Error fetching players:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const fetchPlayers = async () => {
-    try {
-      setLoading(true);
-      const response = await axios.get(`/api/players?status=${statusFilter}`);
-      setPlayers(response.data);
-      setError('');
-    } catch (error) {
-      setError('Failed to fetch players');
-      console.error('Error fetching players:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    fetchPlayers();
+  }, [statusFilter, router]);
 
   const generateRandomPlayer = async () => {
     try {
@@ -77,7 +76,6 @@ const AdminDashboard = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
-      // Update the player in the list
       const updatedPlayers = players.map(player => 
         player.id === playerId ? { ...player, isSold: true } : player
       );

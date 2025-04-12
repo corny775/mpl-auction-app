@@ -25,10 +25,10 @@ export async function adminRegister(username: string, password: string) {
 export async function adminLogin(username: string, password: string) {
   const admin = await prisma.admin.findUnique({ where: { username } })
   if (!admin) throw new Error('Admin not found')
-  
+
   const isValid = await bcrypt.compare(password, admin.password)
   if (!isValid) throw new Error('Invalid password')
-  
+
   return jwt.sign({ id: admin.id, role: 'admin' }, JWT_SECRET, { expiresIn: '1h' })
 }
 
@@ -46,17 +46,17 @@ export async function buyerRegister(username: string, password: string, teamName
 export async function buyerLogin(username: string, password: string) {
   const buyer = await prisma.buyer.findUnique({ where: { username } })
   if (!buyer) throw new Error('Buyer not found')
-  
+
   const isValid = await bcrypt.compare(password, buyer.password)
   if (!isValid) throw new Error('Invalid password')
-  
+
   return jwt.sign({ id: buyer.id, role: 'buyer', teamName: buyer.teamName }, JWT_SECRET, { expiresIn: '1h' })
 }
 
 export function verifyToken(token: string): JwtPayload {
   try {
     return jwt.verify(token, JWT_SECRET) as JwtPayload
-  } catch (error) {
+  } catch {
     throw new Error('Invalid or expired token')
   }
 }

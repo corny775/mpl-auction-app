@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
 import axios from 'axios';
 
 // Admin Dashboard Component
 export const AdminDashboard = () => {
   const [players, setPlayers] = useState([]);
-  const router = useRouter();
 
   useEffect(() => {
     const fetchPlayers = async () => {

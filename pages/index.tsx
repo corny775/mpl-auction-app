@@ -1,10 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/router';
 
 const HomePage = () => {
-  const router = useRouter();
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-500 to-purple-600 flex items-center justify-center">
       <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full">

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import axios from 'axios';
 import Link from 'next/link';
@@ -20,29 +20,10 @@ const BuyerBidPage = () => {
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
   const [bidAmount, setBidAmount] = useState<number>(0);
   const [teamName, setTeamName] = useState<string>('');
-  const [statusFilter, setStatusFilter] = useState('unsold'); // 'all', 'unsold', 'sold'
+  const [statusFilter, setStatusFilter] = useState('unsold');
   const router = useRouter();
 
-  useEffect(() => {
-    // Check if buyer is authenticated
-    const token = localStorage.getItem('buyerToken');
-    if (!token) {
-      router.push('/buyer/login');
-      return;
-    }
-
-    // Extract team name from token
-    try {
-      const tokenData = JSON.parse(atob(token.split('.')[1]));
-      setTeamName(tokenData.teamName || 'Your Team');
-    } catch (e) {
-      console.error('Error parsing token:', e);
-    }
-
-    fetchPlayers();
-  }, [statusFilter]);
-
-  const fetchPlayers = async () => {
+  const fetchPlayers = useCallback(async () => {
     try {
       setLoading(true);
       const response = await axios.get(`/api/players?status=${statusFilter}`);
@@ -54,20 +35,36 @@ const BuyerBidPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [statusFilter]);
+
+  useEffect(() => {
+    const token = localStorage.getItem('buyerToken');
+    if (!token) {
+      router.push('/buyer/login');
+      return;
+    }
+
+    try {
+      const tokenData = JSON.parse(atob(token.split('.')[1]));
+      setTeamName(tokenData.teamName || 'Your Team');
+    } catch (e) {
+      console.error('Error parsing token:', e);
+    }
+
+    fetchPlayers();
+  }, [fetchPlayers, router]);
 
   const selectPlayer = (player: Player) => {
     setSelectedPlayer(player);
-    // Set initial bid amount to be slightly higher than current bid or base price
     const startingBid = player.currentBid > 0 
-      ? Math.ceil(player.currentBid * 1.05) // 5% higher than current bid
+      ? Math.ceil(player.currentBid * 1.05) 
       : player.basePrice;
     setBidAmount(startingBid);
   };
 
   const placeBid = async () => {
     if (!selectedPlayer) return;
-    
+
     try {
       const token = localStorage.getItem('buyerToken');
       await axios.post(
@@ -79,19 +76,16 @@ const BuyerBidPage = () => {
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      
-      // Update the player in the list
+
       const updatedPlayers = players.map(player => 
         player.id === selectedPlayer.id 
           ? { ...player, currentBid: bidAmount, soldToTeam: teamName }
           : player
       );
-      
+
       setPlayers(updatedPlayers);
       setSelectedPlayer(null);
       setMessage('Bid placed successfully!');
-      
-      // Refresh the player list
       setTimeout(fetchPlayers, 1000);
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
@@ -206,7 +200,7 @@ const BuyerBidPage = () => {
                   id="bidAmount"
                   type="number"
                   min={selectedPlayer.currentBid + 1}
-                  step={1000000} // 10 lakhs increments
+                  step={1000000}
                   className="w-full p-2 border rounded"
                   value={bidAmount}
                   onChange={(e) => setBidAmount(Number(e.target.value))}
